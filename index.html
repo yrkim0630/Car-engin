@@ -225,4 +225,205 @@
     blockMesh.position.y = -0.6;
     engineGroup.add(blockMesh);
 
-    // 실린더 및 피스톤 객
+    // 실린더 및 피스톤 객체를 담을 배열
+    const pistons = [];
+    const connectingRods = [];
+    const cylinderCount = 8;
+    const bankAngle = Math.PI / 4; // 90도 V형 (좌우 45도씩)
+
+    for (let i = 0; i < cylinderCount; i++) {
+        const isRight = i >= 4;
+        const indexInBank = i % 4;
+        
+        // Z축 상의 실린더 배치 간격
+        const zPos = -3.0 + indexInBank * 2.0;
+        const xOffset = isRight ? 1.6 : -1.6;
+        const yOffset = 1.0;
+
+        // V형 뱅크별 실린더 헤드(밸브 커버) 장식
+        const headGeo = new THREE.BoxGeometry(1.6, 0.8, 1.8);
+        const headMesh = new THREE.Mesh(headGeo, matHead);
+        const angle = isRight ? bankAngle : -bankAngle;
+        
+        headMesh.position.set(isRight ? 2.2 : -2.2, 2.2, zPos);
+        headMesh.rotation.z = angle;
+        engineGroup.add(headMesh);
+
+        // 피스톤 메쉬 생성
+        const pistonGeo = new THREE.CylinderGeometry(0.7, 0.7, 1.2, 32);
+        const pistonMesh = new THREE.Mesh(pistonGeo, matPiston);
+        engineGroup.add(pistonMesh);
+
+        // 커넥팅로드(막대) 메쉬 생성
+        const rodGeo = new THREE.CylinderGeometry(0.18, 0.18, 2.0, 16);
+        const rodMesh = new THREE.Mesh(rodGeo, matRod);
+        engineGroup.add(rodMesh);
+
+        pistons.push({
+            mesh: pistonMesh,
+            isRight: isRight,
+            index: indexInBank,
+            z: zPos,
+            baseX: xOffset,
+            angle: angle
+        });
+
+        connectingRods.push({
+            mesh: rodMesh,
+            z: zPos,
+            baseX: xOffset,
+            angle: angle
+        });
+    }
+
+    // 중앙 크랭크축 메쉬 생성
+    const crankGeo = new THREE.CylinderGeometry(0.4, 0.4, 8.5, 32);
+    const crankMesh = new THREE.Mesh(crankGeo, matCrank);
+    crankMesh.rotation.x = Math.PI / 2;
+    crankMesh.position.y = -2.2;
+    engineGroup.add(crankMesh);
+
+    // --- 3. 시뮬레이션 상태 및 오디오 설정 ---
+    const ignitionBtn = document.getElementById('ignition-btn');
+    const throttleRange = document.getElementById('throttleRange');
+    const rpmDisplay = document.getElementById('rpmDisplay');
+
+    let isRunning = false;
+    let rpm = 0;
+    let targetRpm = 0;
+    let crankAngle = 0;
+
+    let audioCtx = null;
+    let osc1 = null, osc2 = null, gainNode = null, filterNode = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            osc1 = audioCtx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(40, audioCtx.currentTime);
+
+            osc2 = audioCtx.createOscillator();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(80, audioCtx.currentTime);
+
+            filterNode = audioCtx.createBiquadFilter();
+            filterNode.type = 'lowpass';
+            filterNode.frequency.setValueAtTime(300, audioCtx.currentTime);
+
+            gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+            osc1.connect(filterNode);
+            osc2.connect(filterNode);
+            filterNode.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc1.start();
+            osc2.start();
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function updateAudio() {
+        if (!audioCtx || !isRunning) return;
+        const baseFreq = 30 + (rpm / 7500) * 140;
+        osc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.05);
+        osc2.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.05);
+        filterNode.frequency.setTargetAtTime(250 + (rpm / 7500) * 2500, audioCtx.currentTime, 0.05);
+        
+        const throttleVal = parseInt(throttleRange.value);
+        const targetGain = 0.04 + (throttleVal / 100) * 0.12;
+        gainNode.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.05);
+    }
+
+    function stopAudio() {
+        if (gainNode && audioCtx) {
+            gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+        }
+    }
+
+    ignitionBtn.addEventListener('click', () => {
+        initAudio();
+        isRunning = !isRunning;
+        if (isRunning) {
+            ignitionBtn.textContent = "ENGINE RUNNING";
+            ignitionBtn.classList.add('running');
+            targetRpm = 800;
+        } else {
+            ignitionBtn.textContent = "ENGINE START";
+            ignitionBtn.classList.remove('running');
+            targetRpm = 0;
+            throttleRange.value = 0;
+            stopAudio();
+        }
+    });
+
+    // --- 4. 애니메이션 루프 및 물리 연산 ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (isRunning) {
+            const throttle = parseInt(throttleRange.value);
+            const maxRpm = 7500;
+            const idleRpm = 800;
+            
+            targetRpm = idleRpm + (throttle / 100) * (maxRpm - idleRpm);
+            rpm += (targetRpm - rpm) * 0.1;
+            if (rpm < 100) rpm = 0;
+
+            // 크랭크 각도 업데이트
+            crankAngle += (rpm / 60) * Math.PI * 2 * 0.016;
+            updateAudio();
+        } else {
+            rpm += (0 - rpm) * 0.1;
+            if (rpm < 10) rpm = 0;
+        }
+
+        rpmDisplay.textContent = Math.round(rpm);
+
+        // 피스톤 및 커넥팅로드의 3D 왕복 위치 동기화 계산
+        pistons.forEach((p, idx) => {
+            // V8 크랭크 점화 위상 반영
+            const phase = crankAngle + (idx * Math.PI / 2);
+            const strokeVal = Math.sin(phase) * 0.9;
+
+            // 뱅크 각도에 맞춰 피스톤이 사선 방향으로 왕복 운동하도록 좌표 변환
+            const currentX = p.baseX + Math.sin(p.angle) * strokeVal;
+            const currentY = 0.5 + Math.cos(p.angle) * strokeVal;
+
+            p.mesh.position.set(currentX, currentY, p.z);
+            p.mesh.rotation.z = p.angle;
+
+            // 커넥팅로드 위치 및 회전 연동
+            const rod = connectingRods[idx];
+            rod.mesh.position.set(currentX * 0.5, currentY * 0.5 - 0.8, p.z);
+            rod.mesh.rotation.z = p.angle * 0.5 + strokeVal * 0.2;
+        });
+
+        // 엔진 전체를 미세하게 진동시켜 생동감 부여
+        if (isRunning && rpm > 100) {
+            const vibration = (rpm / 7500) * 0.03;
+            engineGroup.position.x = (Math.random() - 0.5) * vibration;
+            engineGroup.position.y = (Math.random() - 0.5) * vibration;
+        } else {
+            engineGroup.position.set(0, 0, 0);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // 창 크기 변경 대응
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>
