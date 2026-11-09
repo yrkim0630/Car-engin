@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V8 Engine Simulator (GitHub Pages)</title>
+    <title>3D V8 Engine Simulator</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,34 +12,49 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background-color: #121212;
+            background-color: #0b0b0e;
             color: #e0e0e0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .ui-overlay {
+            position: relative;
+            z-index: 10;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .container {
-            width: 95%;
-            max-width: 900px;
-            background: #1e1e1e;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
             padding: 20px;
-            border: 1px solid #333;
+        }
+        header, .dashboard {
+            pointer-events: auto;
+            background: rgba(20, 20, 25, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
+            padding: 15px 25px;
+            max-width: 400px;
         }
         header h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: #ffaa00;
             letter-spacing: 1px;
         }
@@ -47,123 +62,102 @@
             background: #ff4500;
             color: white;
             padding: 4px 8px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             border-radius: 4px;
             font-weight: bold;
         }
-        .simulator-layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 768px) {
-            .simulator-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-        .canvas-box {
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid #444;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
         .dashboard {
+            align-self: flex-end;
+            width: 320px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            background: #252525;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #383838;
+            margin-bottom: 10px;
         }
         .gauge-group {
             text-align: center;
-            background: #151515;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #333;
+            background: rgba(10, 10, 15, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
         .gauge-value {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #00ffcc;
             font-family: monospace;
+            text-shadow: 0 0 10px rgba(0,255,204,0.3);
         }
         .gauge-label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #888;
-            margin-top: 2px;
-            text-transform: uppercase;
+            margin-top: 4px;
+            letter-spacing: 2px;
         }
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
         button {
-            padding: 12px;
+            padding: 14px;
             font-size: 1rem;
             font-weight: bold;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
+            letter-spacing: 1px;
         }
         #ignition-btn {
             background: #d9534f;
             color: white;
+            box-shadow: 0 4px 15px rgba(217, 83, 79, 0.4);
         }
         #ignition-btn.running {
-            background: #5cb85c;
+            background: #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         }
         .pedal-container {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
         .pedal-container label {
-            font-size: 0.9rem;
-            color: #bbb;
+            font-size: 0.85rem;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
         }
         input[type=range] {
             width: 100%;
             accent-color: #ffaa00;
             cursor: pointer;
+            height: 6px;
         }
-        .specs {
-            font-size: 0.8rem;
-            color: #999;
-            line-height: 1.4;
-            background: #151515;
-            padding: 10px;
-            border-radius: 6px;
+        .instructions {
+            font-size: 0.75rem;
+            color: #777;
+            text-align: center;
+            margin-top: 5px;
         }
     </style>
+
+    <!-- Three.js 및 OrbitControls CDN 불러오기 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>V8 ENGINE SIMULATOR</h1>
-        <span class="badge">HTML5 / Web Audio</span>
-    </header>
+    <div id="canvas-container"></div>
 
-    <div class="simulator-layout">
-        <!-- 실시간 피스톤 및 크랭크축 애니메이션 캔버스 -->
-        <div class="canvas-box">
-            <canvas id="engineCanvas" width="500" height="400"></canvas>
-        </div>
+    <div class="ui-overlay">
+        <header>
+            <h1>3D V8 ENGINE</h1>
+            <span class="badge">WebGL 3D</span>
+        </header>
 
-        <!-- 계기판 및 조작 패널 -->
         <div class="dashboard">
             <div class="gauge-group">
                 <div class="gauge-value" id="rpmDisplay">0</div>
@@ -174,210 +168,61 @@
                 <button id="ignition-btn">ENGINE START</button>
                 
                 <div class="pedal-container">
-                    <label for="throttleRange">Accelerator Pedal (가속페달)</label>
+                    <label><span>가속 페달 (Throttle)</span></label>
                     <input type="range" id="throttleRange" min="0" max="100" value="0">
                 </div>
             </div>
-
-            <div class="specs">
-                <strong>Engine Specs:</strong><br>
-                • Configuration: V8 (90°)<br>
-                • Displacement: 5.0L DOHC<br>
-                • Redline: 7,500 RPM
-            </div>
+            <div class="instructions">마우스 드래그로 3D 시점을 회전할 수 있습니다.</div>
         </div>
     </div>
-</div>
 
 <script>
-    const canvas = document.getElementById('engineCanvas');
-    const ctx = canvas.getContext('2d');
-    const ignitionBtn = document.getElementById('ignition-btn');
-    const throttleRange = document.getElementById('throttleRange');
-    const rpmDisplay = document.getElementById('rpmDisplay');
+    // --- 1. Three.js 기본 씬 설정 ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0.0b0b0e, 0.015);
 
-    let isRunning = false;
-    let rpm = 0;
-    let targetRpm = 0;
-    let crankAngle = 0;
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 8, 25);
 
-    // Web Audio API를 활용한 가상 엔진 배기음 생성기
-    let audioCtx = null;
-    let osc1 = null, osc2 = null, gainNode = null, filterNode = null;
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
 
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
-            // 저음역대 엔진 바이브레이션 오실레이터
-            osc1 = audioCtx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(40, audioCtx.currentTime);
+    // 조명 설정
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-            // 배기음 톤 오실레이터
-            osc2 = audioCtx.createOscillator();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(80, audioCtx.currentTime);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(15, 30, 20);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
 
-            filterNode = audioCtx.createBiquadFilter();
-            filterNode.type = 'lowpass';
-            filterNode.frequency.setValueAtTime(300, audioCtx.currentTime);
+    const pointLight = new THREE.PointLight(0xffaa00, 2, 50);
+    pointLight.position.set(0, 0, 0);
+    scene.add(pointLight);
 
-            gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    // --- 2. 3D V8 엔진 모델 구조 생성 ---
+    const engineGroup = new THREE.Group();
+    scene.add(engineGroup);
 
-            osc1.connect(filterNode);
-            osc2.connect(filterNode);
-            filterNode.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+    // 재질(Materials) 정의
+    const matIron = new THREE.MeshStandardMaterial({ color: 0x33353b, roughness: 0.4, metalness: 0.8 });
+    const matPiston = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.9 });
+    const matRod = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.8 }); // 골드빛 커넥팅로드
+    const matCrank = new THREE.MeshStandardMaterial({ color: 0x555c66, roughness: 0.3, metalness: 0.9 });
+    const matHead = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.4, metalness: 0.5 }); // 레드 헤드 커버
 
-            osc1.start();
-            osc2.start();
-        } else if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
+    // 엔진 블록 베이스
+    const blockGeo = new THREE.BoxGeometry(4.2, 3.2, 7.5);
+    const blockMesh = new THREE.Mesh(blockGeo, matIron);
+    blockMesh.position.y = -0.6;
+    engineGroup.add(blockMesh);
 
-    function updateAudio() {
-        if (!audioCtx || !isRunning) return;
-
-        // RPM에 따른 주파수 및 볼륨 가변 조정
-        const baseFreq = 25 + (rpm / 7500) * 120;
-        osc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.05);
-        osc2.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.05);
-        
-        filterNode.frequency.setTargetAtTime(200 + (rpm / 7500) * 2000, audioCtx.currentTime, 0.05);
-        
-        const throttleVal = parseInt(throttleRange.value);
-        const targetGain = 0.05 + (throttleVal / 100) * 0.15;
-        gainNode.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.05);
-    }
-
-    function stopAudio() {
-        if (gainNode && audioCtx) {
-            gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
-        }
-    }
-
-    // 엔진 시동/정지 토글
-    ignitionBtn.addEventListener('click', () => {
-        initAudio();
-        isRunning = !isRunning;
-        if (isRunning) {
-            ignitionBtn.textContent = "ENGINE RUNNING";
-            ignitionBtn.classList.add('running');
-            targetRpm = 800; // 아이들링 RPM
-        } else {
-            ignitionBtn.textContent = "ENGINE START";
-            ignitionBtn.classList.remove('running');
-            targetRpm = 0;
-            throttleRange.value = 0;
-            stopAudio();
-        }
-    });
-
-    // 시뮬레이션 메인 루프 (피스톤 운동 및 RPM 계산)
-    function updatePhysics() {
-        if (isRunning) {
-            const throttle = parseInt(throttleRange.value);
-            // 가속페달 입력에 따른 목표 RPM 설정 (공회전 및 레드라인 제어)
-            const maxRpm = 7500;
-            const idleRpm = 800;
-            
-            let desiredRpm = idleRpm + (throttle / 100) * (maxRpm - idleRpm);
-            
-            // 자연스러운 RPM 반응속도 적용
-            targetRpm = desiredRpm;
-            rpm += (targetRpm - rpm) * 0.1;
-            
-            if (rpm < 100) rpm = 0;
-
-            // 크랭크축 회전 각도 업데이트 (RPM 비례)
-            crankAngle += (rpm / 60) * Math.PI * 2 * 0.016;
-            
-            updateAudio();
-        } else {
-            rpm += (0 - rpm) * 0.1;
-            if (rpm < 10) rpm = 0;
-        }
-
-        rpmDisplay.textContent = Math.round(rpm);
-    }
-
-    // V8 엔진 실린더 컷아웃(단면) 시각화 렌더링
-    function drawEngine() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 엔진 블록 배경 가이드
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(40, 40, 420, 320);
-
-        ctx.fillStyle = '#888';
-        ctx.font = '14px sans-serif';
-        ctx.fillText("V8 90° CUTAWAY VIEW", 55, 70);
-
-        // V형 2개 뱅크 (좌우 각 4개 실린더) 위치 설정
-        const cylinders = 8;
-        const bankAngle = Math.PI / 4; // 45도 기울기
-
-        for (let i = 0; i < cylinders; i++) {
-            const isRightBank = i >= 4;
-            const bankIndex = i % 4;
-            
-            // 실린더 좌표 계산
-            const centerX = 250 + (isRightBank ? 1 : -1) * (70 + bankIndex * 22);
-            const centerY = 120 + bankIndex * 35;
-
-            // 크랭크 각도 위상차 반영한 피스톤 왕복 운동 구현
-            const pistonOffset = Math.sin(crankAngle + (i * Math.PI / 2)) * 25;
-
-            // 실린더 외곽선
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(centerX - 12, centerY - 25, 24, 50);
-
-            // 피스톤 헤드 (왕복 움직임)
-            ctx.fillStyle = isRunning && rpm > 500 ? '#ffaa00' : '#aaa';
-            ctx.fillRect(centerX - 10, centerY - 15 + (pistonOffset * 0.4), 20, 18);
-
-            // 커넥팅 로드 라인
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY + 3 + (pistonOffset * 0.4));
-            ctx.lineTo(250, 320);
-            ctx.strokeStyle = '#444';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
-
-        // 중앙 크랭크축(Crankshaft) 회전 표현
-        ctx.beginPath();
-        ctx.arc(250, 320, 20, 0, Math.PI * 2);
-        ctx.fillStyle = '#333';
-        ctx.fill();
-        ctx.strokeStyle = '#ffaa00';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // 크랭크축 회전 바늘
-        const needleX = 250 + Math.cos(crankAngle * 2) * 15;
-        const needleY = 320 + Math.sin(crankAngle * 2) * 15;
-        ctx.beginPath();
-        ctx.moveTo(250, 320);
-        ctx.lineTo(needleX, needleY);
-        ctx.strokeStyle = '#fff';
-        ctx.stroke();
-    }
-
-    // 통합 루프 구동 함수 (초당 60프레임 렌더링)
-    function loop() {
-        updatePhysics();
-        drawEngine();
-        requestAnimationFrame(loop);
-    }
-
-    loop();
-</script>
-
-</body>
-</html>
+    // 실린더 및 피스톤 객
