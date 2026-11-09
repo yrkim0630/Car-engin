@@ -39,3 +39,717 @@
         header {
             height: 50px;
             background: linear-gradient(to bottom, #161b22, #0d0f12);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: #fff;
+            font-weight: 400;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .main-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr 340px;
+            grid-template-rows: 1fr 220px;
+            height: calc(100vh - 50px);
+            background: #090b0e;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(13, 15, 18, 0.5);
+        }
+
+        .panel-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 3D 뷰포트 영역 */
+        #viewport-container {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            position: relative;
+            background: radial-gradient(circle at center, #1a2233 0%, #080a0f 100%);
+        }
+
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 다이노 그래프 영역 */
+        .dyno-panel {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group label span {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        select, button {
+            background: #1a2233;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover, button:hover {
+            border-color: var(--accent-color);
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #00ffcc 0%, #00b386);
+            color: #090b0e;
+            font-weight: 700;
+            border: none;
+            box-shadow: 0 0 15px rgba(0,255,204,0.3);
+        }
+
+        button.primary:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 20px rgba(0,255,204,0.5);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #ff3344 0%, #cc0011);
+            color: #fff;
+            font-weight: 700;
+            border: none;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1a2233;
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid var(--border-color);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* 게이지 대시보드 패널 (하단 좌측) */
+        .gauges-panel {
+            grid-column: 1;
+            grid-row: 2;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .gauges-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .gauge-box {
+            background: #0d0f12;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            font-family: monospace;
+        }
+
+        .gauge-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 다이노 캔버스 */
+        #dyno-canvas {
+            width: 100%;
+            height: 220px;
+            background: #0d0f12;
+            border-bottom: 1px solid var(--border-color);
+            display: block;
+        }
+
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .stat-row span:last-child {
+            font-family: monospace;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .floating-tips {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(13, 15, 18, 0.8);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            ⚙️ ENGINE SIMULATOR <span>Pro v3.2</span>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+            GitHub Pages Ready • Three.js Web Audio Engine
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- 좌측: 설정 패널 -->
+        <div class="panel" style="grid-row: 1;">
+            <div class="panel-header">Engine Configuration</div>
+            <div class="panel-body">
+                <div class="control-group">
+                    <label>엔진 타입 선택</label>
+                    <select id="engineType">
+                        <option value="i4">I4 (직렬 4기통)</option>
+                        <option value="v6">V6 (V형 6기통)</option>
+                        <option value="v8">V8 (V형 8기통)</option>
+                        <option value="v16">V16 Cadillac (초고성능 16기통)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>시동 및 전원</label>
+                    <button id="ignitionBtn" class="primary">스타트 (Engine Start)</button>
+                </div>
+
+                <div class="control-group">
+                    <label>스로틀 (Throttle) <span id="throttleVal">0%</span></label>
+                    <input type="range" id="throttleInput" min="0" max="100" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label>카메라 모드</label>
+                    <select id="cameraMode">
+                        <option value="orbit">자유 회전 (Orbit)</option>
+                        <option value="top">상단 컷아웃 (Top Cutaway)</option>
+                        <option value="side">측면 크랭크 (Side Profile)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 좌측: 실시간 계기판 -->
+        <div class="panel gauges-panel">
+            <div class="panel-header">Telemetry Dashboard</div>
+            <div class="panel-body">
+                <div class="gauges-grid">
+                    <div class="gauge-box">
+                        <div class="gauge-value" id="rpmDisplay">800</div>
+                        <div class="gauge-label">RPM</div>
+                    </div>
+                    <div class="gauge-box">
+                        <div class="gauge-value" id="hpDisplay">45</div>
+                        <div class="gauge-label">Power (HP)</div>
+                    </div>
+                    <div class="gauge-box">
+                        <div class="gauge-value" id="torqueDisplay">62</div>
+                        <div class="gauge-label">Torque (Nm)</div>
+                    </div>
+                    <div class="gauge-box">
+                        <div class="gauge-value" id="tempDisplay">88°C</div>
+                        <div class="gauge-label">Oil Temp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 중앙: 3D 뷰포트 -->
+        <div id="viewport-container">
+            <canvas id="canvas3d"></canvas>
+            <div class="floating-tips">
+                💡 마우스 드래그로 회전 | 휠로 확대/축소 | 스로틀을 올려 엔진 RPM을 높여보세요.
+            </div>
+        </div>
+
+        <!-- 우측: 다이노 및 성능 분석 패널 -->
+        <div class="panel dyno-panel">
+            <div class="panel-header">Dyno & Performance</div>
+            <canvas id="dyno-canvas" width="340" height="200"></canvas>
+            <div class="panel-body">
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span>배기량 (Displacement)</span>
+                        <span id="statDisplacement">2.0 L</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>실린더 개수</span>
+                        <span id="statCylinders">4 실린더</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>최대 출력 (Max HP)</span>
+                        <span id="statMaxHp">220 HP @ 6500 RPM</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>최대 토크 (Max Torque)</span>
+                        <span id="statMaxTq">245 Nm @ 4200 RPM</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>레드존 (Redline)</span>
+                        <span id="statRedline">7,000 RPM</span>
+                    </div>
+                </div>
+                <button id="resetViewBtn">카메라 리셋</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 전역 상태 및 시뮬레이션 변수 ---
+        let isRunning = false;
+        let currentRpm = 800;
+        let targetRpm = 800;
+        let throttle = 0;
+        let crankAngle = 0;
+        
+        const engineSpecs = {
+            i4: { name: 'I4 직렬 4기통', displacement: '2.0 L', cylinders: 4, maxHp: 190, maxTq: 210, redline: 7000, idle: 800 },
+            v6: { name: 'V6 V형 6기통', displacement: '3.5 L', cylinders: 6, maxHp: 310, maxTq: 360, redline: 7500, idle: 900 },
+            v8: { name: 'V8 V형 8기통', displacement: '5.0 L', cylinders: 8, maxHp: 460, maxTq: 550, redline: 8000, idle: 1000 },
+            v16: { name: 'V16 Cadillac', displacement: '13.6 L', cylinders: 16, maxHp: 1000, maxTq: 1350, redline: 6000, idle: 750 }
+        };
+
+        // --- 2. Web Audio API 엔진 사운드 신디사이저 ---
+        let audioCtx = null;
+        let engineOsc = null;
+        let engineGain = null;
+        let subOsc = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            engineGain = audioCtx.createGain();
+            engineGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            engineGain.connect(audioCtx.destination);
+
+            // 주 엔진음 오실레이터
+            engineOsc = audioCtx.createOscillator();
+            engineOsc.type = 'sawtooth';
+            engineOsc.frequency.setValueAtTime(40, audioCtx.currentTime);
+            engineOsc.connect(engineGain);
+            engineOsc.start();
+
+            // 저음 배기음 보강 오실레이터
+            subOsc = audioCtx.createOscillator();
+            subOsc.type = 'triangle';
+            subOsc.frequency.setValueAtTime(20, audioCtx.currentTime);
+            subOsc.connect(engineGain);
+            subOsc.start();
+        }
+
+        function updateAudio() {
+            if (!audioCtx || !isRunning) {
+                if (engineGain) engineGain.gain.setTargetAtTime(0, audioCtx ? audioCtx.currentTime : 0, 0.1);
+                return;
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const spec = engineSpecs[document.getElementById('engineType').value];
+            const freq = (currentRpm / 60) * (spec.cylinders / 2) * 1.5;
+            
+            engineOsc.frequency.setTargetAtTime(Math.max(30, freq), audioCtx.currentTime, 0.05);
+            subOsc.frequency.setTargetAtTime(Math.max(15, freq * 0.5), audioCtx.currentTime, 0.05);
+
+            const loadFactor = 0.05 + (throttle / 100) * 0.25;
+            engineGain.gain.setTargetAtTime(loadFactor, audioCtx.currentTime, 0.05);
+        }
+
+        // --- 3. Three.js 3D 엔진 그래픽 설정 ---
+        const canvas = document.getElementById('canvas3d');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.shadowMap.enabled = true;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.set(12, 8, 14);
+
+        // 조명 설정
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(15, 25, 15);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        const blueLight = new THREE.PointLight(0x00ffcc, 1, 20);
+        blueLight.position.set(-10, 5, -10);
+        scene.add(blueLight);
+
+        // 엔진 그룹
+        let engineGroup = new THREE.Group();
+        scene.add(engineGroup);
+
+        let pistonMeshes = [];
+        let crankshaftGroup = null;
+
+        function buildEngine(type) {
+            // 기존 엔진 오브젝트 제거
+            scene.remove(engineGroup);
+            engineGroup = new THREE.Group();
+            pistonMeshes = [];
+
+            const spec = engineSpecs[type];
+            const matBlock = new THREE.MeshStandardMaterial({ color: 0x222630, metalness: 0.8, roughness: 0.3 });
+            const matPiston = new THREE.MeshStandardMaterial({ color: 0xd8dee9, metalness: 0.9, roughness: 0.1 });
+            const matRod = new THREE.MeshStandardMaterial({ color: 0x8892b0, metalness: 0.7, roughness: 0.2 });
+            const matCrank = new THREE.MeshStandardMaterial({ color: 0xebcb8b, metalness: 0.9, roughness: 0.2 });
+            const matCover = new THREE.MeshStandardMaterial({ color: type === 'v16' ? 0x111111 : 0xbf616a, metalness: 0.5, roughness: 0.4 });
+
+            if (type === 'i4') {
+                // 직렬 4기통 구조
+                const blockGeo = new THREE.BoxGeometry(2.2, 3.2, 5.5);
+                const block = new THREE.Mesh(blockGeo, matBlock);
+                block.position.y = 1.6;
+                engineGroup.add(block);
+
+                const coverGeo = new THREE.BoxGeometry(2.0, 1.0, 5.3);
+                const cover = new THREE.Mesh(coverGeo, matCover);
+                cover.position.y = 3.7;
+                engineGroup.add(cover);
+
+                crankshaftGroup = new THREE.Group();
+                for (let i = 0; i < 4; i++) {
+                    const zPos = -1.8 + i * 1.2;
+                    
+                    // 피스톤
+                    const pistonGeo = new THREE.CylinderGeometry(0.7, 0.7, 1.2, 32);
+                    const piston = new THREE.Mesh(pistonGeo, matPiston);
+                    piston.position.set(0, 2.5, zPos);
+                    engineGroup.add(piston);
+                    pistonMeshes.push({ mesh: piston, baseZ: zPos, index: i, type: 'i4' });
+                }
+                engineGroup.add(crankshaftGroup);
+
+            } else if (type === 'v6' || type === 'v8' || type === 'v16') {
+                // V형 엔진 구조 (V6, V8, V16)
+                const count = spec.cylinders;
+                const pairs = count / 2;
+                const length = pairs * 1.3;
+
+                const blockGeo = new THREE.BoxGeometry(4.2, 2.8, length + 1);
+                const block = new THREE.Mesh(blockGeo, matBlock);
+                block.position.y = 1.4;
+                engineGroup.add(block);
+
+                // 듀얼 밸브 커버 (V형 양쪽 뱅크)
+                const coverGeo = new THREE.BoxGeometry(1.6, 0.8, length + 0.8);
+                
+                const coverL = new THREE.Mesh(coverGeo, matCover);
+                coverL.position.set(-1.4, 3.1, 0);
+                coverL.rotation.z = -Math.PI / 6;
+                engineGroup.add(coverL);
+
+                const coverR = new THREE.Mesh(coverGeo, matCover);
+                coverR.position.set(1.4, 3.1, 0);
+                coverR.rotation.z = Math.PI / 6;
+                engineGroup.add(coverR);
+
+                for (let i = 0; i < pairs; i++) {
+                    const zPos = -(length / 2) + 0.8 + i * 1.3;
+
+                    // 좌측 뱅크 피스톤
+                    const pistonL = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.1, 24), matPiston);
+                    pistonL.position.set(-1.0, 2.2, zPos);
+                    pistonL.rotation.z = -Math.PI / 6;
+                    engineGroup.add(pistonL);
+                    pistonMeshes.push({ mesh: pistonL, baseZ: zPos, index: i * 2, bank: 'L', angleOffset: 0 });
+
+                    // 우측 뱅크 피스톤
+                    const pistonR = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.1, 24), matPiston);
+                    pistonR.position.set(1.0, 2.2, zPos);
+                    pistonR.rotation.z = Math.PI / 6;
+                    engineGroup.add(pistonR);
+                    pistonMeshes.push({ mesh: pistonR, baseZ: zPos, index: i * 2 + 1, bank: 'R', angleOffset: Math.PI });
+                }
+            }
+
+            scene.add(engineGroup);
+            updateEngineStats(type);
+        }
+
+        function updateEngineStats(type) {
+            const spec = engineSpecs[type];
+            document.getElementById('statDisplacement').innerText = spec.displacement;
+            document.getElementById('statCylinders').innerText = spec.cylinders + ' 실린더';
+            document.getElementById('statMaxHp').innerText = spec.maxHp + ' HP @ ' + (spec.redline - 500) + ' RPM';
+            document.getElementById('statMaxTq').innerText = spec.maxTq + ' Nm @ ' + Math.round(spec.redline * 0.6) + ' RPM';
+            document.getElementById('statRedline').innerText = spec.redline.toLocaleString() + ' RPM';
+        }
+
+        // --- 4. 다이노(Dyno) 그래프 렌더링 ---
+        const dynoCanvas = document.getElementById('dyno-canvas');
+        const dynoCtx = dynoCanvas.getContext('2d');
+
+        function drawDynoGraph() {
+            const w = dynoCanvas.width;
+            const h = dynoCanvas.height;
+            dynoCtx.clearRect(0, 0, w, h);
+
+            // 격자 배경
+            dynoCtx.strokeStyle = '#1a2233';
+            dynoCtx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                dynoCtx.beginPath();
+                dynoCtx.moveTo(0, h * (i / 4));
+                dynoCtx.lineTo(w, h * (i / 4));
+                dynoCtx.stroke();
+            }
+
+            const type = document.getElementById('engineType').value;
+            const spec = engineSpecs[type];
+
+            // HP 곡선 (청록색)
+            dynoCtx.strokeStyle = '#00ffcc';
+            dynoCtx.lineWidth = 2;
+            dynoCtx.beginPath();
+            for (let x = 0; x < w; x++) {
+                const rpmRatio = x / w;
+                const hp = spec.maxHp * Math.sin(rpmRatio * Math.PI * 0.8) * (0.3 + 0.7 * rpmRatio);
+                const y = h - (hp / (spec.maxHp * 1.1)) * h;
+                if (x === 0) dynoCtx.moveTo(x, y);
+                else dynoCtx.lineTo(x, y);
+            }
+            dynoCtx.stroke();
+
+            // Torque 곡선 (노란색)
+            dynoCtx.strokeStyle = '#ebcb8b';
+            dynoCtx.lineWidth = 2;
+            dynoCtx.beginPath();
+            for (let x = 0; x < w; x++) {
+                const rpmRatio = x / w;
+                const tq = spec.maxTq * Math.sin(rpmRatio * Math.PI * 0.9);
+                const y = h - (tq / (spec.maxTq * 1.1)) * h;
+                if (x === 0) dynoCtx.moveTo(x, y);
+                else dynoCtx.lineTo(x, y);
+            }
+            dynoCtx.stroke();
+
+            // 현재 RPM 인디케이터 바
+            const currentRpmRatio = currentRpm / 9000;
+            const indicatorX = currentRpmRatio * w;
+            dynoCtx.strokeStyle = '#ff3344';
+            dynoCtx.lineWidth = 1.5;
+            dynoCtx.beginPath();
+            dynoCtx.moveTo(indicatorX, 0);
+            dynoCtx.lineTo(indicatorX, h);
+            dynoCtx.stroke();
+        }
+
+        // --- 5. 이벤트 리스너 및 UI 인터랙션 ---
+        document.getElementById('ignitionBtn').addEventListener('click', () => {
+            initAudio();
+            isRunning = !isRunning;
+            const btn = document.getElementById('ignitionBtn');
+            if (isRunning) {
+                btn.innerText = '시동 끄기 (Engine Stop)';
+                btn.className = 'danger';
+                targetRpm = engineSpecs[document.getElementById('engineType').value].idle;
+            } else {
+                btn.innerText = '스타트 (Engine Start)';
+                btn.className = 'primary';
+                targetRpm = 0;
+                throttle = 0;
+                document.getElementById('throttleInput').value = 0;
+                document.getElementById('throttleVal').innerText = '0%';
+            }
+        });
+
+        const throttleInput = document.getElementById('throttleInput');
+        throttleInput.addEventListener('input', (e) => {
+            throttle = parseInt(e.target.value);
+            document.getElementById('throttleVal').innerText = throttle + '%';
+            if (isRunning) {
+                const spec = engineSpecs[document.getElementById('engineType').value];
+                const span = spec.redline - spec.idle;
+                targetRpm = spec.idle + (span * (throttle / 100));
+            }
+        });
+
+        document.getElementById('engineType').addEventListener('change', (e) => {
+            buildEngine(e.target.value);
+            if (isRunning) {
+                targetRpm = engineSpecs[e.target.value].idle;
+            }
+        });
+
+        document.getElementById('cameraMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            if (mode === 'orbit') {
+                camera.position.set(12, 8, 14);
+                camera.lookAt(0, 2, 0);
+            } else if (mode === 'top') {
+                camera.position.set(0, 15, 0.1);
+                camera.lookAt(0, 0, 0);
+            } else if (mode === 'side') {
+                camera.position.set(16, 2, 0);
+                camera.lookAt(0, 2, 0);
+            }
+        });
+
+        document.getElementById('resetViewBtn').addEventListener('click', () => {
+            camera.position.set(12, 8, 14);
+            camera.lookAt(0, 2, 0);
+        });
+
+        // --- 6. 애니메이션 루프 ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // RPM 자연스러운 보간
+            if (isRunning) {
+                const diff = targetRpm - currentRpm;
+                currentRpm += diff * 0.1;
+                if (currentRpm < 500) currentRpm = 500;
+            } else {
+                currentRpm += (0 - currentRpm) * 0.1;
+                if (currentRpm < 10) currentRpm = 0;
+            }
+
+            // 크랭크각 회전 업데이트
+            const delta = clock.getDelta();
+            if (currentRpm > 0) {
+                crankAngle += (currentRpm * 6 * Math.PI / 180) * delta;
+            }
+
+            // 피스톤 상하 운동 애니메이션
+            pistonMeshes.forEach((p, idx) => {
+                const offset = (p.index * Math.PI) / 2;
+                const stroke = Math.sin(crankAngle + offset) * 0.45;
+                p.mesh.position.y = 2.2 + stroke;
+            });
+
+            // 오디오 업데이트
+            updateAudio();
+
+            // 대시보드 UI 갱신
+            document.getElementById('rpmDisplay').innerText = Math.round(currentRpm);
+            const spec = engineSpecs[document.getElementById('engineType').value];
+            const hp = Math.round((currentRpm / spec.redline) * spec.maxHp * (0.4 + 0.6 * (throttle / 100)));
+            const tq = Math.round((currentRpm / spec.redline) * spec.maxTq * (0.5 + 0.5 * (throttle / 100)));
+            document.getElementById('hpDisplay').innerText = Math.max(0, hp);
+            document.getElementById('torqueDisplay').innerText = Math.max(0, tq);
+
+            // 다이노 그래프 그리기
+            drawDynoGraph();
+
+            renderer.render(scene, camera);
+        }
+
+        // 초기화 실행
+        buildEngine('i4');
+        animate();
+
+        // 창 크기 조절 대응
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('viewport-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
